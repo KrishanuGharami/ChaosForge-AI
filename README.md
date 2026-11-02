@@ -4,10 +4,10 @@
 
 ## Run locally
 
-Requirements: Node.js 20.9+ and npm.
+Requirements: Node.js 24.x and npm. The same major is selected for Vercel builds through `package.json`.
 
 ```bash
-npm install
+npm ci
 Copy-Item .env.example .env.local
 npm run dev
 ```
@@ -21,6 +21,7 @@ Set these values in `.env.local` (or in Vercel project environment variables):
 ```env
 NEXT_PUBLIC_TWITCH_CHANNEL=your_channel_name
 OPENAI_API_KEY=your_openai_api_key
+NEXT_PUBLIC_SITE_URL=https://your-deployment.vercel.app
 ```
 
 The channel is a Twitch username without `#`. The overlay connects to public Twitch IRC from the browser using anonymous read-only access. A live channel is required to see real chat commands; viewers can use `!chaos <request>`, `!vote <option>`, and `!help`. Chaos commands have an 8-second per-viewer cooldown and a 300-character input cap. Voting is local to that overlay instance and lasts 30 seconds; this lightweight MVP accepts free-text options and counts one current vote per username.
@@ -47,7 +48,12 @@ npm run lint
 
 ## Deploy to Vercel
 
-Import this repository in Vercel, set `OPENAI_API_KEY` (optional) and `NEXT_PUBLIC_TWITCH_CHANNEL` (optional) as environment variables, then deploy. The AI route is server-side; the Twitch IRC connection runs in the viewer's browser, so no persistent server process or event bus is needed. The app does not require a database or Twitch login.
+1. In Vercel, choose **Add New → Project** and import `KrishanuGharami/ChaosForge-AI` from GitHub.
+2. Keep the detected **Next.js** framework and root directory `./`. Leave the install command on Vercel's npm default so it detects `package-lock.json`; set the build command to `npm run build` if it is not detected. No custom output directory or `vercel.json` is needed.
+3. Add `NEXT_PUBLIC_TWITCH_CHANNEL` for the channel to connect to. Add `OPENAI_API_KEY` to enable natural-language interpretation. Keep the key server-only; the fallback and dashboard demo work without it. Optionally set `NEXT_PUBLIC_SITE_URL` to the final public URL for accurate social-preview metadata; when omitted, the app uses Vercel's `VERCEL_URL`.
+4. Deploy. Vercel creates a preview for other branches and a production deployment from the configured production branch (normally `main`). If you add or change environment variables later, redeploy for them to take effect.
+
+The app uses Vercel's Node.js 24 runtime. The AI route has a 15-second function ceiling and an OpenAI request timeout so slow model calls fall back instead of hanging the chat event. The Twitch IRC connection runs in each viewer's browser; no persistent server process, event bus, database, or Twitch login is required. See [Vercel's Next.js build docs](https://vercel.com/docs/builds) and [environment variable docs](https://vercel.com/docs/environment-variables) for platform settings.
 
 ## Current MVP boundaries
 
